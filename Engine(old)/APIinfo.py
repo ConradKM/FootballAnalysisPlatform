@@ -55,8 +55,9 @@ class API():
 
         return league
     
-    def getPlayersFromTeam(self, team_id ):
-        pass
+    def getPlayersFromTeam(self, season_id, team_id):
+        data = self.__getData(f"{self.__base_url}/league-player?key={self.__key}&season_id={season_id}")
+        
         
 
 

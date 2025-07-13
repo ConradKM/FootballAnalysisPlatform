@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Union, Any
 
 class Team():
     def __init__(
@@ -48,7 +48,7 @@ class Team():
         self.__alt_names = alt_names or []
         self.__official_sites = official_sites or []
         self.__stats = stats or {}
-        self.players = []
+        self.__players = []
 
     # Property getters
     @property
@@ -95,6 +95,14 @@ class Team():
     def official_sites(self): return self.__official_sites
     @property
     def stats(self): return self.__stats
+    @property
+    def players(self): return self.__players
+
+
+    def get_stats(self, key: Optional[str] = None) -> Union[dict, Any]:
+        if key:
+            return self.__stats.get(key)
+        return self.__stats
 
     def __repr__(self):
         return f"<Team {self.__name} ({self.__country})>"

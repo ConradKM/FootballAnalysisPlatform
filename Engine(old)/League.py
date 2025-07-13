@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Union, Any
 from Team import Team  # Make sure your Team class is in team.py or adjust import
 
 class League:
@@ -28,6 +28,13 @@ class League:
     @property
     def stats(self) -> int:
         return self.__stats
+    
+    def get_stats(self, key: Optional[str] = None) -> Union[dict, Any]:
+        if key:
+            return self.__stats.get(key)
+        return self.__stats
+
+    
 
     def __repr__(self):
         return f"<League {self.__name} {self.__seasonID} with {len(self.__teams)} teams>"
