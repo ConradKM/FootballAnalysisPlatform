@@ -58,6 +58,20 @@ class API():
     def getPlayersFromTeam(self, season_id, team_id):
         data = self.__getData(f"{self.__base_url}/league-player?key={self.__key}&season_id={season_id}")
         
+        players_dict = {}
+        for player_data in data.get("data", []):
+            player_id = player_data.get("id")
+            if player_id is not None:
+                player = Player(
+                    id=player_id,
+                    name=player_data.get("known_as"),
+                    stats_footy=player_data
+                )
+                players_dict[player_id] = player
+        
+        return players_dict
+
+        
         
 
 
