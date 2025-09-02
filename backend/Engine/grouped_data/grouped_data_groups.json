@@ -1,0 +1,9 @@
+{
+  "season_over_goals": "seasonOver\\d{2}",
+  "over_corners": "over\\d{2,3}Corners",
+  "over_corners_for": "over\\d{2,3}CornersFor",
+  "over_corners_against": "over\\d{2,3}CornersAgainst",
+  "over_cards": "over\\d{2}Cards",
+  "over_cards_for": "over\\d{2}CardsFor",
+  "over_cards_against": "over\\d{2}CardsAgainst"
+}
