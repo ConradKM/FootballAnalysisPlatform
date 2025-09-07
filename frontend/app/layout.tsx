@@ -36,7 +36,9 @@ export default function RootLayout({
         className={`${inter.variable} antialiased`}
       >
         <Navbar/>
+        <main className="pt-10 overflow">
         {children}
+        </main>
       </body>
     </html>
   );

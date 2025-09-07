@@ -29,6 +29,8 @@ from Engine.LeagueEngine import LeagueEngine
 leagueEngine = LeagueEngine(league)
 
 def process_mode(stat:str, mode:str = None):
+    if stat == "risk":
+        return "risk" 
     return f"{stat}_{mode}" if mode else f"{stat}_overall"
 
 
@@ -65,9 +67,6 @@ def getMatch(matchId : int) -> Dict:
     date_str = datetime.fromtimestamp(data.get("date_unix")).strftime("%Y-%m-%d %H:%M")
     homeTeam = league.get_team(match.home_team_id)
     awayTeam = league.get_team(data.get("awayID"))
-    print(data.get("homeID"))
-    print(data.get("awayID"))
-
     
     return {
         "id": match.id,
@@ -106,8 +105,9 @@ def team_matchradarchart(
         "Attacking": ["seasonScoredAVG", "xg_for_avg"],
         "Defending": ["seasonCS", "seasonConcededAVG", "xg_against_avg"],
         "Control": ["possessionAVG", "leadingAtHT"],
-        "Efficiency": ["seasonPGG", "seasonGoalDifference"],
-        "Set Pieces": ["cornersAVG", "fouls_recorded"]
+        "Efficiency": ["seasonPPG", "seasonGoalDifference"],
+        "Set Pieces": ["cornersAVG", "foulsAVG"],
+        "Risk": ["risk"]
     }
 
     # Stats where lower is better → negative_ranking=True
@@ -159,5 +159,74 @@ def team_matchradarchart(
 
     except Exception as e:
         return {"error": str(e)}
-    
+
+@app.get("/leagueEngine/team_matchtable")
+def team_matchtable(match_id: int) -> Dict:
+    match = league.get_match_by_id(match_id)
+    home_team_id = match.home_team_id
+    away_team_id = match.away_team_id
+    home_team = league.get_team(home_team_id)
+    away_team = league.get_team(away_team_id)
+
+    negative_stats = {"seasonConcededAVG", "xg_against_avg", "risk"}
+
+    # Display names → underlying stat key
+    stats = {
+        "Points Per Game": "seasonPPG",
+        "Goals Per Game": "seasonScoredAVG",
+        "Average XG For": "xg_for_avg",
+        "Average XG Against": "xg_against_avg",
+        "Goals Conceded Per Game": "seasonConcededAVG",
+        "Clean Sheets": "seasonCS",
+        "Possession %": "possessionAVG",
+        "Corners Per Game": "cornersAVG",
+        "Fouls Committed Per Game": "foulsAVG",
+        "Risk": "risk"
+    }
+
+    def build_team_data(team_id: int, mode=None) -> Dict:
+        rawdata = {}
+        rankings = {}
+        isNegativeRanked = {}
+
+        for display_name, stat_key in stats.items():
+            processed_stat = process_mode(stat_key, mode)
+            print(f"Processing stat: {processed_stat} for team {team_id}")
+            is_negative = stat_key in negative_stats
+
+
+            try:
+                # raw stat value from the team
+                team_stats = league.get_team(team_id).get_stats()
+                raw_val = team_stats.get(processed_stat)
+
+                # league rank (1 = best, N = worst)
+                rank = leagueEngine.compare_team_to_league(
+                    processed_stat, team_id, negative_ranking=is_negative
+                )
+
+                rawdata[display_name] = raw_val
+                rankings[display_name] = rank
+                isNegativeRanked[display_name] = is_negative
+
+            except Exception as e:
+                print(f"Stat {stat_key} failed for team {team_id}: {e}")
+                rawdata[display_name] = None
+                rankings[display_name] = None
+                isNegativeRanked[display_name] = is_negative
+
+        return {
+            "rawData": rawdata,
+            "rankings": rankings,
+            "isNegativeRanked": isNegativeRanked,
+        }
+
+    return {
+        "homeTeamImage": home_team.cleanName,
+        "awayTeamImage": away_team.cleanName,
+        "homeData": build_team_data(home_team_id, "home"),
+        "awayData": build_team_data(away_team_id, "away"),
+    }
+
+
 

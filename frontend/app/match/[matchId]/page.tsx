@@ -19,17 +19,20 @@ interface Match {
 }
 
 interface Props {
-  params: { matchId: string };
+  params: Promise<{ matchId: string }>;
 }
 
 export default function MatchPage({ params }: Props) {
-  const [matchId, setMatchID] = useState<string | null>(null);
+  const unwrappedParams = use(params);
+  const [matchId, setMatchID] = useState<number | null>(null);
   const [match, setMatch] = useState<Match | null>(null);
   const [activeTab, setActiveTab] = useState("General");
-
   useEffect(() => {
-    if (params?.matchId) {
-      setMatchID(params.matchId);
+    if (unwrappedParams?.matchId) {
+      const parsedId = Number(unwrappedParams.matchId);
+      if (!isNaN(parsedId)) {
+        setMatchID(parsedId);
+      }
     }
   }, [params]);
 

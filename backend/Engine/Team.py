@@ -48,6 +48,7 @@ class Team():
         self.__alt_names = alt_names or []
         self.__official_sites = official_sites or []
         self.__stats = stats or {}
+        self.__stats["risk"] = risk
         self.__players = []
 
     # Property getters

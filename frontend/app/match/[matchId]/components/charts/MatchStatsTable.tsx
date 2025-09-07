@@ -1,7 +1,7 @@
 import React from "react";
 
 interface TeamData {
-  rawdata: Record<string, number>;
+  rawData: Record<string, number>;
   rankings: Record<string, number>;
   isNegativeRanked: Record<string, boolean>;
 }
@@ -19,7 +19,7 @@ export default function MatchStatsTable({
   homeData,
   awayData,
 }: MatchStatsTableProps) {
-  const stats = Object.keys(homeData.rawdata);
+  const stats = Object.keys(homeData.rawData);
 
   // Flip value if lower is better
   const getAdjusted = (value: number, isNegative: boolean) =>
@@ -37,8 +37,8 @@ export default function MatchStatsTable({
         </thead>
         <tbody>
           {stats.map((stat) => {
-            const homeValue = homeData.rawdata[stat];
-            const awayValue = awayData.rawdata[stat];
+            const homeValue = homeData.rawData[stat];
+            const awayValue = awayData.rawData[stat];
             const isNegative = homeData.isNegativeRanked[stat];
 
             const homeRank = homeData.rankings[stat];
