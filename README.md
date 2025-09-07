@@ -7,6 +7,7 @@ The main aim is to get it fully online before the end of the year and keep devel
 
 ## Preview
 For those who can't get it running or just trying to get a general look at the website, photos are provided here:
+
 ![alt text](frontend/app/components/images/image.png)
 ![alt text](frontend/app/components/images/Card1.png)
 ![alt text](frontend/app/components/images/Card2.png)
