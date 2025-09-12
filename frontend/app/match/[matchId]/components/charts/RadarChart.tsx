@@ -18,29 +18,17 @@ ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, 
 interface RadarDataset {
   data: Record<string, number>;
   label: string;
-  color?: string; // optional custom color (in RGB format: "37, 99, 235")
+  color?: string; // RGB format: "37, 99, 235"
 }
 
 interface RadarChartProps {
   datasets: RadarDataset[];
   centerImage?: string;
   minRank?: number;
-  maxRank?: number;        // max value for radar scale
-  imageOpacity?: number;   // transparency for the center image (0-1)
-  reverseAxis?: boolean;   // visually flip the radial axis
-}
-
-// 🔹 Generate distinct colors automatically
-function generateColor(index: number): string {
-  const hue = (index * 137.508) % 360; // golden angle to spread colors
-  return `hsl(${hue}, 70%, 50%)`
-    .replace("hsl(", "")
-    .replace(")", "")
-    .replace(/%/g, "") // convert to RGB-like format (approx)
-    .split(",")
-    .map((v) => parseInt(v.trim()))
-    .slice(0, 3)
-    .join(", ");
+  maxRank?: number;
+  imageOpacity?: number;
+  reverseAxis?: boolean;
+  colors?: string[]; // 🔹 optional hardcoded palette ["255,0,0", "0,255,0", ...]
 }
 
 export default function RadarChart({
@@ -50,6 +38,7 @@ export default function RadarChart({
   maxRank = 20,
   imageOpacity = 0.1,
   reverseAxis = false,
+  colors,
 }: RadarChartProps) {
   const chartRef = useRef<any>(null);
 
@@ -60,10 +49,11 @@ export default function RadarChart({
   // assume all datasets share the same keys
   const labels = Object.keys(datasets[0].data);
 
+  // 🔹 Use custom dataset colors OR fallback to provided palette
   const chartData = {
     labels,
     datasets: datasets.map((ds, i) => {
-      const color = ds.color ?? generateColor(i);
+      const color = ds.color ?? colors?.[i] ?? "37, 99, 235"; // default blue if nothing provided
       return {
         label: ds.label,
         data: Object.values(ds.data),
@@ -82,9 +72,7 @@ export default function RadarChart({
         min: minRank,
         max: maxRank,
         reverse: reverseAxis,
-        ticks: {
-          stepSize: Math.ceil(maxRank / 4),
-        },
+        ticks: { stepSize: Math.ceil(maxRank / 4) },
       },
     },
     plugins: {
@@ -96,7 +84,6 @@ export default function RadarChart({
     id: "centerImagePlugin",
     beforeDatasetsDraw: (chart: any) => {
       if (!centerImage) return;
-
       const ctx = chart.ctx;
       const { left, right, top, bottom } = chart.chartArea;
       const xCenter = (left + right) / 2;

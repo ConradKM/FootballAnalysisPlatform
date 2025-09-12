@@ -5,6 +5,7 @@ class Player:
         self.__id = id
         self.__name = name
         self.__stats_footy = stats_footy
+        self.__team_id = stats_footy.get("club_team_id")
 
     @property
     def id(self) -> int:
@@ -17,11 +18,19 @@ class Player:
     @property
     def stats_footy(self) -> Dict:
         return self.__stats_footy
+    
+    @property
+    def team_id(self) -> Optional[int]:
+        return self.__stats_footy.get("club_team_id")
 
     def get_stats(self, key: Optional[str] = None) -> Union[dict, Any]:
         if key:
             return self.__stats_footy.get(key)
-        return self.__stats
+        return self.__stats_footy
+    
+    @property
+    def image(self) -> Optional[str]:
+        return self.__convert_player_url(self.__stats_footy.get("url")) if self.__stats_footy.get("url") else None
 
     def __repr__(self):
         return f"<Player {self.__name} (ID: {self.__id})>"
@@ -31,5 +40,15 @@ class Player:
         return cls(
             id=data.get("id"),
             name=data.get("known_as"),
-            stats_footy=data
+            stats_footy=data,
+            team_id=data.get("club_team_id")
         )
+    
+    def __convert_player_url(self, url: str) -> str:
+        base = "https://cdn.footystats.org/img/players/"
+        path = url.replace("https://footystats.org/players/", "").replace("/", "-")
+        return f"{base}{path}.png"
+
+
+        
+

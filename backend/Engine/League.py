@@ -26,6 +26,16 @@ class League:
     
     def setPlayers(self, players):
         self.__players = players
+        for team in self.__teams.values():
+            team.players.clear()
+        # Allocate each player to their team
+        for player in players.values():
+            team = self.__teams.get(player.team_id)
+            if team:
+                team.players.append(player.id)
+            else:
+                print(f"⚠️ Player {player.name} (id={player.id}) has no matching team (player team={player.team_id}) in this league")
+
 
     def get_players(self):
         return self.__players
@@ -97,8 +107,6 @@ class League:
             },
             "stat": stat
         }
-
-
 
     
 

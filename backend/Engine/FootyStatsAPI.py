@@ -53,8 +53,6 @@ class FootyStatsAPI():
         else:
             data = self.__getData(f"{self.__base_url}/league-teams?key={self.__key}&season_id={season_id}&include=stats")
 
-        league.setPlayers(self.__getPlayersFromTeam(season_id))
-
         for team in data.get("data", []):
             new_team = Team.from_dict(team)
             league.add_team(new_team)
@@ -102,7 +100,12 @@ class FootyStatsAPI():
 
         return match_dict
 
-
+    def getMatchDetails(self, match_id: int):
+        url = f"{self.__base_url}/match?key={self.__key}&match_id={match_id}"
+        data = self.__getData(url)
+        if data.get("success", False):
+            return data.get("data", {})
+        return {}
     
     def __getPlayersFromTeam(self, season_id : int, team_id=-1):
         players_dict = {}

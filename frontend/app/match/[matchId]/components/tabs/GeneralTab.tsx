@@ -109,6 +109,7 @@ export default function GeneralTab({ match }: Props) {
                 centerImage={match.awayTeamLogo}
                 reverseAxis={true}
                 minRank={1}
+                colors={[ "89, 203, 255","255, 119, 74"]}
               />
             ) : (
               <p className="text-gray-500">Loading radar stats...</p>

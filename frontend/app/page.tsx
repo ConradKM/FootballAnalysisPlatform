@@ -8,6 +8,7 @@ import CardSwap, { Card } from './components/CardSwap';
 import Image from "next/image";
 import card1image from "@/app/components/images/Card1.png"
 import card2image from "@/app/components/images/Card2.png"
+import card3image from "@/app/components/images/Card3.png"
 import ShinyText from './components/ShinyText';
 
 export default function Home() {
@@ -120,7 +121,7 @@ export default function Home() {
               className="object-cover rounded-lg"
               priority
             />
-            <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/60 to-transparent text-white">
+            <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/20 to-transparent text-white">
               <h3 className="text-xl font-bold">Premier League Matches</h3>
             </div>
           </div>
@@ -136,7 +137,7 @@ export default function Home() {
               className="object-cover rounded-lg"
               priority
             />
-            <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/60 to-transparent text-white">
+            <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/20 to-transparent text-white">
               <h3 className="text-xl font-bold">In-depth Match Analysis</h3>
             </div>
           </div>
@@ -144,9 +145,17 @@ export default function Home() {
 
         {/* Card 3 */}
         <Card>
-          <div className="relative w-full h-full p-4 bg-gray-100 rounded-lg flex flex-col justify-center">
-            <h3 className="text-xl font-bold">Card 3</h3>
-            <p className="mt-2">Your content here</p>
+          <div className="relative w-full h-full">
+            <Image
+              src={card3image}
+              alt="In-depth Match Analysis"
+              fill
+              className="object-cover rounded-lg"
+              priority
+            />
+            <div className="absolute inset-0 p-4 flex flex-col justify-end bg-gradient-to-t from-black/20 to-transparent text-white">
+              <h3 className="text-xl font-bold">Match Data</h3>
+            </div>
           </div>
         </Card>
       </CardSwap>

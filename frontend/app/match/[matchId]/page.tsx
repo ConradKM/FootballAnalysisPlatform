@@ -5,8 +5,9 @@ import { useState, useEffect } from "react";
 import { use } from 'react';
 import Image from "next/image";
 import CornersTab from "./components/tabs/CornersTab";
-import RadarChart from "./components/charts/RadarChart";
 import GeneralTab from "./components/tabs/GeneralTab";
+import PlayersTab from "./components/tabs/PlayersTab";
+
 
 interface Match {
   homeTeamName: string;
@@ -85,7 +86,7 @@ export default function MatchPage({ params }: Props) {
       {/* Tabs */}
       <div className="w-4/5 mx-auto">
         <div className="flex border-b mb-6">
-          {["General", "Corners", "Cards"].map((tab) => (
+          {["General", "Corners", "Players"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -104,14 +105,7 @@ export default function MatchPage({ params }: Props) {
         <div>
           {activeTab === "General" && match && <GeneralTab match={match} />}
           {activeTab === "Corners" && match && <CornersTab match={match} /> }
-          {activeTab === "Cards" && (
-            <p className="text-gray-600">🟨 Card statistics here... <RadarChart
-  data={{ Corners: 8, Goals: 3, Cards: 2 }}
-  label="Arsenal"
-  centerImage="https://cdn.footystats.org/img/teams/england-arsenal-fc.png"
-/>
-</p>
-          )}
+          {activeTab === "Players" && match && <PlayersTab match={match} /> }
         </div>
       </div>
 

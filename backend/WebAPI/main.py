@@ -26,7 +26,9 @@ app.add_middleware(
 )
 
 from Engine.LeagueEngine import LeagueEngine
+from Engine.PlayerEngine import PlayerEngine
 leagueEngine = LeagueEngine(league)
+playerEngine = PlayerEngine(league)
 
 def process_mode(stat:str, mode:str = None):
     if stat == "risk":
@@ -227,6 +229,231 @@ def team_matchtable(match_id: int) -> Dict:
         "homeData": build_team_data(home_team_id, "home"),
         "awayData": build_team_data(away_team_id, "away"),
     }
+
+@app.get("/playerEngine/rank_players_by_stat")
+def rank_players_by_stat(
+    stat: str,
+    team_id: Optional[int] = Query(None, description="Filter players who played in this match"),
+    match_id: Optional[int] = Query(None, description="Filter players who played in this match"),
+    mode: str = Query("overall", description="home, away, overall"),
+    top_n: int = Query(10, description="Number of top players to return"),
+    ascending: bool = Query(False, description="Sort order: False=desc, True=asc")
+) -> List[Dict]:
+    """
+    Returns top N players ranked by a stat, including player info (id, name, image).
+    """
+    stat = process_mode(stat, mode)
+    if team_id is None and match_id is None:
+        try:
+            # Rank players by stat
+            ranked_players = playerEngine.rank_players_by_stat(stat, mode, top_n, ascending)
+
+            # Add additional player info (image)
+            result = []
+            for player_info in ranked_players:
+                player_id = player_info["id"]
+                player = league.get_player(player_id)
+                result.append({
+                    "id": player.id,
+                    "name": player.name,
+                    "image": player.image,
+                    **{k: v for k, v in player_info.items() if k != "id" and k != "name"}
+                })
+
+            return result
+
+        except ValueError as ve:
+            return {"error": str(ve)}
+    elif team_id is not None and match_id is None:
+        try:
+            # Get match and both teams
+            
+            team = league.get_team(team_id)
+            print(f"Found team: {team.name} with players: {team.players}")
+            players = team.players
+            if not players:
+                return {"error": f"No players found for team ID {team_id}"}
+
+            ranked = []
+            for player_id in players:
+                player = league.get_player(player_id)
+                try:
+                    stat_value = player.get_stats(stat)
+                except Exception as e:
+                    print(f"Error getting stat {stat} for player {player.name} (ID: {player.id}): {e}")
+                    stat_value = None
+
+
+                if stat_value is not None:
+                    ranked.append({
+                        "id": player.id,
+                        "name": player.name,
+                        "image": player.image,
+                        "stat": stat_value
+                    })
+
+            # Sort by stat and return top N
+            ranked.sort(key=lambda x: x["stat"], reverse=not ascending)
+            return ranked[:top_n]
+
+        except Exception as e:
+            return {"error": str(e)}
+    elif match_id is not None and team_id is None:
+        try:
+            match = league.get_match_by_id(match_id)
+            if not match:
+                return {"error": f"No match found with ID {match_id}"}
+
+            home_team = league.get_team(match.home_team_id)
+            away_team = league.get_team(match.away_team_id)
+
+            all_players = home_team.players + away_team.players
+            if not all_players:
+                return {"error": f"No players found for match ID {match_id}"}
+
+            ranked = []
+            for player_id in all_players:
+                player = league.get_player(player_id)
+                try:
+                    stat_value = player.get_stats(stat)
+                except Exception as e:
+                    print(f"Error getting stat {stat} for player {player.name} (ID: {player.id}): {e}")
+                    stat_value = None
+
+                if stat_value is not None:
+                    ranked.append({
+                        "id": player.id,
+                        "name": player.name,
+                        "image": player.image,
+                        "stat": stat_value
+                    })
+
+            # Sort by stat and return top N
+            ranked.sort(key=lambda x: x["stat"], reverse=not ascending)
+            return ranked[:top_n]
+
+        except Exception as e:
+            return {"error": str(e)}
+        
+@app.get("/playerEngine/get_top_rated_players")
+def get_top_rated_players(
+    match_id: int,
+    mode: str = Query("overall", description="home, away, overall"),
+    top_n: int = Query(5, description="Number of top players to return"),
+    ascending: bool = Query(False, description="Sort order: False=desc, True=asc")
+) -> List[Dict]:
+    """
+    Returns top N players by rating for a specific match, including player info (id, name, image).
+    """
+    try:
+        # Get top rated players for the match
+        top_players = playerEngine.get_top_rated_players(match_id, mode, top_n, ascending)
+        positions = {"Goalkeeper": "GK", "Defender": "DEF", "Midfielder": "MID", "Forward": "FWD"}
+        # Add additional player info (image)
+        match = league.get_match_by_id(match_id)
+        home_team = league.get_team(match.home_team_id)
+        away_team = league.get_team(match.away_team_id)
+        result = []
+        for player_info in top_players:
+            player_id = player_info["id"]
+            player_stats = league.get_player(player_id).get_stats()
+            player = league.get_player(player_id)
+            result.append({
+                "id": player.id,
+                "name": player.name,
+                "team": home_team.id if player.team_id == home_team.id else away_team.id,
+                "position": positions.get(player_stats.get("position")),
+                "goals": player_stats.get(process_mode("goals")),
+                "assists": player_stats.get(process_mode("assists")),
+                "clean_sheets": player_stats.get(process_mode("clean_sheets")),
+                "image": player.image,
+                **{k: v for k, v in player_info.items() if k != "id" and k != "name"}
+            })
+
+        return result
+
+    except ValueError as ve:
+        return {"error": str(ve)}
+    except Exception as e:
+        return {"error": str(e)}
+
+    
+@app.get("/league/players/{player_id}")
+def getPlayer(player_id : int) -> Dict:
+    player = league.get_player(player_id)
+    return {
+        "id": player.id,
+        "name": player.name,
+        "image": player.image,
+    }
+
+@app.get("/playerEngine/penalty_takers")
+def get_penalty_takers(match_id: int) -> List[Dict]:
+    match = league.get_match_by_id(match_id)
+    if not match:
+        return {"error": f"No match found with ID {match_id}"}
+    
+    home_team = league.get_team(match.home_team_id)
+    away_team = league.get_team(match.away_team_id)
+
+    penalty_takers = []
+    for team in [home_team, away_team]:
+        # try:
+            takers = playerEngine.penalty_takers(team.id)
+            print(f"Penalty takers for team {team.name}: {takers}")
+            for taker in takers:
+                player = league.get_player(taker["id"])
+                penalty_takers.append({
+                    "id": player.id,
+                    "name": player.name,
+                    "team": player.team_id,
+                    **{k: v for k, v in taker.items() if k != "id"}
+                })
+        # except Exception as e:
+        #     print(f"Error fetching penalty takers for team {team.name}: {e}")
+        #     continue
+    penalty_takers_sorted = sorted(
+        penalty_takers,
+        key=lambda p: p.get("penalties_taken", 0),
+        reverse=True
+    )
+
+    return penalty_takers_sorted
+
+@app.get("/matchDetails/lineups")
+def get_match_lineups(match_id: int) -> Dict:
+    match_details = footyapi.getMatchDetails(match_id)
+    lineups = match_details.get("lineups", {})
+
+    # Define position order mapping
+    position_map = {
+        "Goalkeeper": "GK",
+        "Defender": "DEF",
+        "Midfielder": "MID",
+        "Forward": "FWD"
+    }
+    position_order = ["GK", "DEF", "MID", "FWD"]
+
+    # Process each team
+    for team_key in ["team_a", "team_b"]:
+        if team_key in lineups:
+            enriched_players = []
+            for player in lineups[team_key]:
+                player_obj = league.get_player(player["player_id"])
+                # Add name
+                player["name"] = player_obj.name if player_obj else "Unknown"
+                # Add position abbreviation
+                raw_position = player_obj.get_stats("position") if player_obj else "Unknown"
+                player["position"] = position_map.get(raw_position, "UNK")
+                enriched_players.append(player)
+            
+            # Sort players by position order
+            lineups[team_key] = sorted(
+                enriched_players,
+                key=lambda p: position_order.index(p["position"]) if p["position"] in position_order else 99
+            )
+
+    return lineups
 
 
 
